@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react"
-import { auth } from "../../firebase/base"
+import { auth } from "../firebase/base"
 import { sendPasswordResetEmail } from "firebase/auth"
-import styles from "../../styles/forms.module.css"
+import styles from "../styles/forms.module.css"
 import { useRouter } from "next/router"
 
 export const Login = () => {
