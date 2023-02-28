@@ -1,18 +1,11 @@
 import React from 'react'
 import styles from "../styles/card.module.css"
 
-export const Card = ({ de, para, cardID, onRender }) => {
+export const Card = ({ username, para, cardID }) => {
     return (
         <div className={styles.card}>
-            <strong>{de} dice</strong>
-            <p>me gusta {para}</p>
-            {/* <div className={styles.cardLyOne}>
-                <div className={styles.iconContainer}>
-                    <ion-icon name="return-down-forward-outline"></ion-icon>
-                    {"     "}
-                    <span>Ok, hagamos match!</span>
-                </div>
-            </div> */}
+            <strong><b>{username}</b></strong>
+            <p>Me gusta <b>{para}</b>!</p>
         </div>
     )
 }

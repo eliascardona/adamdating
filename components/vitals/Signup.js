@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { auth, firestore } from "../../firebase/base";
 import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { 
+  collection,
   doc,  
-  // collection,
-  // getDoc,
-  // getDocs,
+  query,
+  where,
+  getDocs,
   setDoc
 } from "firebase/firestore";
 import styles from "../../styles/forms.module.css";
@@ -17,46 +18,41 @@ export const Signup = () => {
   const nameRef = useRef();
   const usernameRef = useRef();
   const router = useRouter();
-  // const [usernames, setUsernames] = useState([])
-  // const [usernameAlert, setUsernameAlert] = useState("")
-  // const [dynUsername, setDynUsername] = useState("")
+  const [username, setUsername] = useState("")
+  const [usernameAllowed, setUsernameAllowed] = useState(false)
+  const [showErr, setShowErr] = useState(false)
   
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const data = [];
-  //     const collRef = collection(firestore, "users");
-  //     const coll = await getDocs(collRef);
-  //     let xdocs = coll.docs;
-  //     xdocs.forEach(async (info) => {
-  //       data.push(info.data());
-  //     })
-  //     setUsernames(data);
-  //   }
-  //   getData();
-  // }, []);
-  
-  // const checkUsername = () => {
-  //   const userName = usernameRef.current.value;
-  //   usernames?.filter((itm, i, arr) => {
-  //     setDynUsername(itm?.username)
-  //     if (userName===dynUsername) {
-  //       setUsernameAlert("username en uso, escoge otro 😥")
-  //     }
-  //   })
-  // }
-  
-  const signUp = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    async function checkUsername() {
+      const usersRef = collection(firestore, "users")
+      const q = query(usersRef, where("username", "==", `@${username}`))
+      const querySnapshot = await getDocs(q)
+      setUsernameAllowed(querySnapshot.docs.length === 0)
+    }
+    checkUsername()
+    return (setUsernameAllowed(undefined))
+  }, [username])
+
+  const signUp = async () => {
     const name = nameRef.current.value;
+    //Ponemos la primer letra de cada palabra del nombre en mayúscula.
+    if(name.length > 0) {
+      const words = name.split(" ");
+      for (let i = 0; i < words.length; i++) {
+        words[i] = words[i][0].toUpperCase() + words[i].substring(1);
+      }
+      name = words.join(" ")
+    }
     const userName = usernameRef.current.value;
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
     const res = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(firestore, `users/${res.user.email}`), {
+    usernameAllowed && await setDoc(doc(firestore, `users/${res.user.email}`), {
       email: res.user.email,
       id: res.user.uid,
       nombre: name,
-      username: `@${userName}`
+      username: `@${userName}`,
+      likes: []
     });
   };
   
@@ -65,10 +61,20 @@ export const Signup = () => {
     window.location.reload();
   };
 
+const handleSignUp = async (e) => {
+  e.preventDefault();
+  setShowErr(false)
+  if(usernameAllowed) {
+    signUp()
+  } else {
+    setShowErr(true)
+  }
+}
+
   return (
     <>
       <h2>Crear cuenta</h2>
-      <span className={styles.label}>Nombre</span>
+      <span className={styles.label}>Nombre y Apellido</span>
       <input
         type="text"
         ref={nameRef}
@@ -79,15 +85,16 @@ export const Signup = () => {
       <input
         type="text"
         ref={usernameRef}
-        placeholder="@username"
+        onChange={(e) => setUsername(e.target.value)}
+        placeholder="username"
         className={styles.input}
-        // onBlur={checkUsername}
       />
-      {/* --------------------------------------------- */}
-      {/* <span className={styles.alertLabel}>
-        username en uso, escoge otro 😥
-      </span> */}
-      {/* --------------------------------------------- */}
+      {
+        showErr && 
+        <span className={styles.alertLabel}>
+          username en uso, escoge otro 😥
+        </span>
+      }
       <span className={styles.label}>Email</span>
       <input
         type="email"
@@ -105,7 +112,8 @@ export const Signup = () => {
       <button
         type="button"
         className={styles.formBtn}
-        onClick={signUp}
+        onClick={handleSignUp}
+        disabled={usernameAllowed === undefined}
       >
         Sign up
       </button>

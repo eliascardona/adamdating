@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
         const token = await user.getIdToken();
         setUser(user);
         nookies.set(undefined, "token", token, { path: "/" });
-        router.push("/");
+        router.push("/secretPage");
       }
     });
   }, []);
